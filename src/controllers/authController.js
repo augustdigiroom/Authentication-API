@@ -134,7 +134,16 @@ const loginUser = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: "Protected profile route.",
+    user: req.user,
+  });
+};
+
 module.exports = {
   registerUser,
   loginUser,
+  getProfile,
 };
