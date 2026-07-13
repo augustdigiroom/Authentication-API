@@ -5,6 +5,7 @@ const {
   registerUser,
   loginUser,
   getProfile,
+  verifyEmail,
 } = require("../controllers/authController");
 
 const protect = require("../middleware/authMiddleware");
@@ -17,5 +18,8 @@ router.post("/login", loginUser);
 
 // Protected route
 router.get("/profile", protect, getProfile);
+
+// Email verification route
+router.get("/verify/:token", verifyEmail);
 
 module.exports = router;
