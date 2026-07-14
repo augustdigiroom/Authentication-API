@@ -120,6 +120,14 @@ const loginUser = async (req, res) => {
       });
     }
 
+    // Check if email is verified
+    if (!user.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "Please verify your email first.",
+      });
+    }
+
     // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
 
