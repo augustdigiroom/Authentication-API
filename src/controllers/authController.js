@@ -216,9 +216,22 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getProfile,
   verifyEmail,
+  forgotPassword,
 };
