@@ -442,7 +442,7 @@ https://github.com/augustdigiroom
 
 **LinkedIn**
 
-https://linkedin.com/in/augustinegrepo10
+https://linkedin.com/in/augustinegrepo
 
 ---
 
