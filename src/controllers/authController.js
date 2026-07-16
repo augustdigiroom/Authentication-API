@@ -120,7 +120,7 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Check if email is verified
+    // Prevent login if email is not verified
     if (!user.isVerified) {
       return res.status(403).json({
         success: false,
@@ -139,27 +139,39 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Password correct
-    // return res.status(200).json({
-    //   success: true,
-    //   message: "Password verified. Ready to generate JWT.",
-    // });
-
-    const token = jwt.sign(
+    // Generate Access Token
+    const accessToken = jwt.sign(
       {
         id: user._id,
         email: user.email,
       },
       process.env.JWT_SECRET,
       {
-        expiresIn: "1h",
+        expiresIn: "15m",
       },
     );
 
+    // Generate Refresh Token
+    const refreshToken = jwt.sign(
+      {
+        id: user._id,
+      },
+      process.env.JWT_REFRESH_SECRET,
+      {
+        expiresIn: "7d",
+      },
+    );
+
+    // Save Refresh Token to the database
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    // Return tokens
     return res.status(200).json({
       success: true,
       message: "Login successful.",
-      token,
+      accessToken,
+      refreshToken,
     });
   } catch (error) {
     console.error("Login Error:", error);
@@ -329,6 +341,89 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Refresh token is required.",
+      });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+    const user = await User.findById(decoded.id);
+
+    if (!user || user.refreshToken !== refreshToken) {
+      return res.status(403).json({
+        success: false,
+        message: "Invalid refresh token.",
+      });
+    }
+
+    // Generate a new access token
+    const newAccessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "15m",
+    });
+
+    return res.status(200).json({
+      success: true,
+      accessToken: newAccessToken,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+const logoutUser = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    // Check if refresh token is provided
+    if (!refreshToken) {
+      return res.status(400).json({
+        success: false,
+        message: "Refresh token is required.",
+      });
+    }
+
+    // Find user with this refresh token
+    const user = await User.findOne({ refreshToken });
+
+    // If token doesn't exist, treat logout as completed
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message: "Logged out successfully.",
+      });
+    }
+
+    // Remove refresh token
+    user.refreshToken = null;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully.",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -336,4 +431,6 @@ module.exports = {
   verifyEmail,
   forgotPassword,
   resetPassword,
+  refreshToken,
+  logoutUser,
 };

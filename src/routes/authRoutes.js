@@ -8,6 +8,8 @@ const {
   verifyEmail,
   forgotPassword,
   resetPassword,
+  refreshToken,
+  logoutUser,
 } = require("../controllers/authController");
 
 const protect = require("../middleware/authMiddleware");
@@ -29,5 +31,11 @@ router.post("/forgot-password", forgotPassword);
 
 // Reset password route
 router.post("/reset-password/:token", resetPassword);
+
+// Refresh token route
+router.post("/refresh-token", refreshToken);
+
+// Logout route
+router.post("/logout", logoutUser);
 
 module.exports = router;
